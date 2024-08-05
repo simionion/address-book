@@ -13,12 +13,12 @@ class ContactController
     private City $cityModel;
     private HtmlRenderer $htmlRenderer;
 
-    public function __construct(Contact $contactModel, City $cityModel)
+    public function __construct(Contact $contactModel, City $cityModel, HtmlRenderer $htmlRenderer)
     {
         $this->contactModel = $contactModel;
         $this->cityModel = $cityModel;
 
-        $this->htmlRenderer = new HtmlRenderer();
+        $this->htmlRenderer = $htmlRenderer;
         $this->htmlRenderer->withLayout('Views/layout/main.php');
     }
 
