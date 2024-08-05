@@ -9,7 +9,6 @@ use Views\HtmlRenderer;
 
 class ContactController
 {
-    protected string $content;
     private Contact $contactModel;
     private City $cityModel;
     private HtmlRenderer $htmlRenderer;
