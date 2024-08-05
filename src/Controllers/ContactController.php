@@ -13,13 +13,13 @@ class ContactController
     private City $cityModel;
     private HtmlRenderer $htmlRenderer;
 
-    public function __construct(Contact $contactModel, City $cityModel, HtmlRenderer $htmlRenderer)
+    public function __construct(HtmlRenderer $htmlRenderer, Contact $contactModel, City $cityModel)
     {
-        $this->contactModel = $contactModel;
-        $this->cityModel = $cityModel;
-
         $this->htmlRenderer = $htmlRenderer;
         $this->htmlRenderer->withLayout('Views/layout/main.php');
+
+        $this->contactModel = $contactModel;
+        $this->cityModel = $cityModel;
     }
 
     public function index(): void
@@ -35,8 +35,8 @@ class ContactController
 
     public function show(int $id): void
     {
-       $this->htmlRenderer
-           ->withContent('Views/contact/show.php')
+        $this->htmlRenderer
+            ->withContent('Views/contact/show.php')
             ->withGlobals([
                 'contact' => $this->contactModel->getContactById($id),
                 'city' => $this->cityModel->getCityById($id)
@@ -62,7 +62,7 @@ class ContactController
 
     public function edit(int $id): void
     {
-       $this->htmlRenderer
+        $this->htmlRenderer
             ->withContent('Views/contact/form.php')
             ->withGlobals([
                 'contact' => $this->contactModel->getContactById($id),
