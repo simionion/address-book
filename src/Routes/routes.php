@@ -4,6 +4,7 @@ use FastRoute\RouteCollector;
 use function FastRoute\simpleDispatcher;
 
 return simpleDispatcher(function (RouteCollector $r) {
+    $r->addRoute('GET', '/', [ContactController::class, 'index']);
     $r->addRoute('GET', '/contacts', [ContactController::class, 'index']);
     $r->addRoute('GET', '/contacts/{id:\d+}', [ContactController::class, 'show']);
     $r->addRoute('GET', '/contacts/create', [ContactController::class, 'create']);
