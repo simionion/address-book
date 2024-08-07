@@ -1,4 +1,5 @@
 <h2 class="text-2xl font-semibold mb-4"><?php echo isset($contact) ? 'Edit' : 'Add'; ?> Contact</h2>
+<a href="/contacts" class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Back to list</a>
 <form method="post" action="/contacts/<?php echo isset($contact) ? 'edit/' . $contact['id'] : 'create'; ?>" class="bg-white p-6 rounded shadow-sm space-y-4">
     <div>
         <label class="block text-lg font-medium mb-2">Name:
@@ -36,8 +37,34 @@
             </select>
         </label>
     </div>
+    <div>
+        <?php if ($groups->isNotEmpty()) {  ?>
+            <label class="block text-lg font-medium mb-2">Groups:
+                <select name="group_ids[]" class="w-full p-2 border rounded" multiple>
+                    <?php foreach ($groups as $group): ?>
+                        <option value="<?php echo $group['id']; ?>" <?php echo (isset($contact) && in_array($group['id'], $contact['group_ids'] ?? [])) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($group['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+        <?php } ?>
+    </div>
+
+    <div>
+        <?php if ($tags->isNotEmpty()) { ?>
+            <label class="block text-lg font-medium mb-2">Tags:
+                <select name="tag_ids[]" class="w-full p-2 border rounded" multiple>
+                    <?php foreach ($tags as $tag): ?>
+                        <option value="<?php echo $tag['id']; ?>" <?php echo (isset($contact) && in_array($tag['id'], $contact['tag_ids'] ?? [])) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($tag['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+        <?php } ?>
+    </div>
     <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">
         <?php echo isset($contact) ? 'Update' : 'Create'; ?>
     </button>
 </form>
-<a href="/contacts" class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Back to list</a>

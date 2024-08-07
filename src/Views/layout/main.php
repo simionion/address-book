@@ -11,13 +11,19 @@
 <header class="bg-blue-600 text-white p-4 shadow-md">
 	<h1 class="text-3xl font-bold">Address Book</h1>
 	<nav class="mt-2">
-		<a href="/contacts" class="text-lg hover:text-blue-300 mr-4">List</a>
-		<a href="/contacts/create" class="text-lg hover:text-blue-300">Add New Contact</a>
+		<a href="/contacts" class="text-lg hover:text-blue-300 mr-4">Contacts</a>
+		<a href="/groups" class="text-lg hover:text-blue-300 mr-4">Groups</a>
+		<a href="/tags" class="text-lg hover:text-blue-300 mr-4">Tags</a>
 	</nav>
 </header>
-<main class="p-4">
-    <?php include $__content; ?>
-</main>
+<div class="flex ">
+	<!-- Sidebar -->
+    <?php isset($__sidebar) && include $__sidebar; ?>
 
+	<!-- Main Content -->
+	<main class="w-3/4 p-4">
+        <?php isset($__content) && include $__content; ?>
+	</main>
+</div>
 </body>
 </html>

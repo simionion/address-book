@@ -3,26 +3,17 @@ declare(strict_types=1);
 
 namespace Models;
 
-use PDO;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class City
+class City extends Model
 {
-    private PDO $pdo;
+    protected $table = 'cities';
+    protected $fillable = ['name'];
+    public $timestamps = false;
 
-    public function __construct(PDO $pdo)
+    public function contacts(): HasMany
     {
-        $this->pdo = $pdo;
-    }
-
-    public function getAllCities(): array
-    {
-        return $this->pdo->query('SELECT * FROM cities')->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function getCityById($id): array|null
-    {
-        $stmt = $this->pdo->prepare('SELECT * FROM cities WHERE id = :id');
-        $stmt->execute(['id' => $id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return $this->hasMany(Contact::class, 'city_id');
     }
 }
