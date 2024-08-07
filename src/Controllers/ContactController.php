@@ -130,4 +130,57 @@ class ContactController
         Contact::destroy($id);
         header('Location: /contacts');
     }
+
+    public function export(): void
+    {
+        $format = $_GET['format'] ?? 'json';
+        $contacts = Contact::with(['city', 'groups', 'tags'])->get()->toArray();
+
+        switch ($format) {
+            case 'xml':
+                $this->exportXml($contacts);
+                break;
+            case 'json':
+            default:
+                $this->exportJson($contacts);
+                break;
+        }
+    }
+
+    private function exportJson(array $contacts): void
+    {
+        header('Content-Type: application/json');
+        echo json_encode($contacts, JSON_PRETTY_PRINT);
+        exit;
+    }
+
+  private function exportXml(array $contacts): void
+{
+    header('Content-Type: application/xml');
+    $xml = new \SimpleXMLElement('<contacts/>');
+
+    foreach ($contacts as $contact) {
+        $contactNode = $xml->addChild('contact');
+        $this->arrayToXml($contact, $contactNode);
+    }
+
+    echo $xml->asXML();
+    exit;
+}
+
+private function arrayToXml(array $data, \SimpleXMLElement $xmlElement): void
+{
+    foreach ($data as $key => $value) {
+        // Ensure the key is a valid string for XML element names
+        $key = is_int($key) ? 'item'.$key : $key;
+
+        if (is_array($value)) {
+            $subnode = $xmlElement->addChild($key);
+            $this->arrayToXml($value, $subnode);
+        } else {
+            // Handle possible null values by converting them to empty strings
+            $xmlElement->addChild($key, htmlspecialchars((string)($value ?? '')));
+        }
+    }
+}
 }

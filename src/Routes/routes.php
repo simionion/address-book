@@ -17,6 +17,8 @@ return simpleDispatcher(function (RouteCollector $r) {
     $r->addRoute('GET', '/contacts/edit/{id:\d+}', [ContactController::class, 'edit']);
     $r->addRoute('POST', '/contacts/edit/{id:\d+}', [ContactController::class, 'update']);
     $r->addRoute('GET', '/contacts/delete/{id:\d+}', [ContactController::class, 'destroy']);
+    $r->addRoute('GET', '/contacts/export', [ContactController::class, 'export']);
+
 
     // Group Routes
     $r->addRoute('GET', '/groups', [GroupController::class, 'index']);
