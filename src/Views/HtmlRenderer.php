@@ -20,6 +20,12 @@ class HtmlRenderer
         return $this;
     }
 
+    public function fileExistsOrThrow(string $file): void
+    {
+        if (!file_exists($file)) {
+            throw new RuntimeException("File {$file} not found");
+        }
+    }
 
     public function withContent(string $content): self
     {
@@ -43,7 +49,6 @@ class HtmlRenderer
         return $this;
     }
 
-
     public function render(): void
     {
 
@@ -63,13 +68,6 @@ class HtmlRenderer
             require $this->layout;
         } else {
             echo "No layout set";
-        }
-    }
-
-    public function fileExistsOrThrow(string $file): void
-    {
-        if (!file_exists($file)) {
-            throw new RuntimeException("File {$file} not found");
         }
     }
 }

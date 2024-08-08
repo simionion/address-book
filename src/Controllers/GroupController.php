@@ -9,16 +9,18 @@ use Views\HtmlRenderer;
 class GroupController
 {
     private HtmlRenderer $htmlRenderer;
+    private Group $groupModel;
 
-    public function __construct(HtmlRenderer $htmlRenderer)
+    public function __construct(HtmlRenderer $htmlRenderer, Group $groupModel)
     {
         $this->htmlRenderer = $htmlRenderer;
+        $this->groupModel = $groupModel;
         $this->htmlRenderer->withLayout('Views/layout/main.php');
     }
 
     public function index(): void
     {
-        $groups = Group::with('childGroups')->get();
+        $groups = $this->groupModel->getAllWithChildGroups();
 
         $this->htmlRenderer
             ->withContent('Views/group/index.php')
@@ -28,22 +30,24 @@ class GroupController
 
     public function create(): void
     {
+        $groups = $this->groupModel->all();
+
         $this->htmlRenderer
             ->withContent('Views/group/form.php')
-            ->withGlobals(['groups' => Group::all()])
+            ->withGlobals(['groups' => $groups])
             ->render();
     }
 
     public function store(): void
     {
-        $group = Group::create($_POST);
+        $group = $this->groupModel->save($_POST);
 
         if (!empty($_POST['parent_group_ids'])) {
-            $group->parentGroups()->attach($_POST['parent_group_ids']);
+            $this->groupModel->attachParentGroups($group['id'], $_POST['parent_group_ids']);
         }
 
         if (!empty($_POST['child_group_ids'])) {
-            $group->childGroups()->attach($_POST['child_group_ids']);
+            $this->groupModel->attachChildGroups($group['id'], $_POST['child_group_ids']);
         }
 
         header('Location: /groups');
@@ -51,33 +55,34 @@ class GroupController
 
     public function edit(int $id): void
     {
-        $group = Group::with(['parentGroups', 'childGroups'])->find($id);
+        $group = $this->groupModel->find($id);
+        $group['parent_groups'] = $this->groupModel->parentGroups($id);
+        $group['child_groups'] = $this->groupModel->childGroups($id);
+
+        $groups = $this->groupModel->all();
 
         $this->htmlRenderer
             ->withContent('Views/group/form.php')
             ->withGlobals([
                 'group' => $group,
-                'groups' => Group::all()
+                'groups' => $groups
             ])
             ->render();
     }
 
     public function update(int $id): void
     {
-        $group = Group::find($id);
-        $group->update($_POST);
+        $this->groupModel->update($id, $_POST);
 
-        $group->parentGroups()->sync($_POST['parent_group_ids'] ?? []);
-        $group->childGroups()->sync($_POST['child_group_ids'] ?? []);
+        $this->groupModel->syncParentGroups($id, $_POST['parent_group_ids'] ?? []);
+        $this->groupModel->syncChildGroups($id, $_POST['child_group_ids'] ?? []);
 
         header('Location: /groups');
     }
 
     public function destroy(int $id): void
     {
-        Group::destroy($id);
+        $this->groupModel->delete($id);
         header('Location: /groups');
     }
 }
-
-?>

@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Services;
 
 use Dice\Dice;
-use Illuminate\Database\Capsule\Manager as Capsule;
+use PDO;
 
 class ServiceProvider
 {
@@ -14,20 +14,14 @@ class ServiceProvider
     {
         $this->dice = new Dice();
 
-        // Configure Eloquent (Capsule)
-        $capsule = new Capsule;
-        $capsule->addConnection([
-            'driver' => $ENV['DB_ADAPTER'],
-            'host' => $ENV['DB_HOST'],
-            'database' => $ENV['DB_NAME'],
-            'username' => $ENV['DB_USER'],
-            'password' => $ENV['DB_PASS'],
-            'charset' => $ENV['DB_CHARSET'],
-            'collation' => $ENV['DB_COLLATION'],
-            'prefix' => $ENV['DB_PREFIX'],
+        // Configure PDO
+        $this->dice = $this->dice->addRule(PDO::class, [
+            'shared' => true,
+            'constructParams' => [
+                sprintf('mysql:host=%s;dbname=%s', $ENV['DB_HOST'], $ENV['DB_NAME']),
+                $ENV['DB_USER'],
+                $ENV['DB_PASS']
+            ]
         ]);
-        $capsule->setAsGlobal();
-        $capsule->bootEloquent();
-
     }
 }

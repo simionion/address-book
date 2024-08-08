@@ -7,7 +7,7 @@
 			</li>
             <?php foreach ($groupsInUse as $group): ?>
 				<li class="mb-2">
-					<a href="/contacts?group=<?php echo $group->id; ?>" class="text-blue-500 hover:text-blue-700 <?php echo (isset($_GET['group']) && $_GET['group'] == $group->id) ? 'font-bold' : ''; ?>"><?php echo htmlspecialchars($group->name); ?></a>
+					<a href="/contacts?group=<?php echo $group['id']; ?>" class="text-blue-500 hover:text-blue-700 <?php echo (isset($_GET['group']) && $_GET['group'] == $group['id']) ? 'font-bold' : ''; ?>"><?php echo htmlspecialchars($group['name']); ?></a>
 				</li>
             <?php endforeach; ?>
 		</ul>
@@ -18,7 +18,7 @@
 		<ul>
             <?php foreach ($tagsInUse as $tag): ?>
 				<li class="mb-2">
-					<a href="/contacts?tag=<?php echo $tag->id; ?>" class="text-blue-500 hover:text-blue-700 <?php echo (isset($_GET['tag']) && $_GET['tag'] == $tag->id) ? 'font-bold' : ''; ?>"><?php echo htmlspecialchars($tag->name); ?></a>
+					<a href="/contacts?tag=<?php echo $tag['id']; ?>" class="text-blue-500 hover:text-blue-700 <?php echo (isset($_GET['tag']) && $_GET['tag'] == $tag['id']) ? 'font-bold' : ''; ?>"><?php echo htmlspecialchars($tag['name']); ?></a>
 				</li>
             <?php endforeach; ?>
 		</ul>

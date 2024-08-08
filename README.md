@@ -3,7 +3,6 @@
 This is a demo address book application scaffolded in PHP, utilizing the following technologies:
 - Dice (Dependency Injection Container)
 - Phinx (Database Migrations
-- Eloquent (ORM) #todo replace phinx migrations with eloquent migrations
 - Dotenv (Environment Variables)
 - FastRoute (Router)
 

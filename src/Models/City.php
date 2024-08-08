@@ -3,17 +3,13 @@ declare(strict_types=1);
 
 namespace Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
 class City extends Model
 {
-    protected $table = 'cities';
-    protected $fillable = ['name'];
-    public $timestamps = false;
+    protected string $table = 'cities';
+    protected array $fillable = ['name'];
 
-    public function contacts(): HasMany
+    public function contacts(int $cityId): array
     {
-        return $this->hasMany(Contact::class, 'city_id');
+        return $this->hasMany(Contact::class, 'city_id', $cityId);
     }
 }

@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+
 namespace Controllers;
 
 use Models\Tag;
@@ -8,16 +9,18 @@ use Views\HtmlRenderer;
 class TagController
 {
     private HtmlRenderer $htmlRenderer;
+    private Tag $tagModel;
 
-    public function __construct(HtmlRenderer $htmlRenderer)
+    public function __construct(HtmlRenderer $htmlRenderer, Tag $tagModel)
     {
         $this->htmlRenderer = $htmlRenderer;
+        $this->tagModel = $tagModel;
         $this->htmlRenderer->withLayout('Views/layout/main.php');
     }
 
     public function index(): void
     {
-        $tags = Tag::all();
+        $tags = $this->tagModel->all();
         $this->htmlRenderer
             ->withContent('Views/tag/index.php')
             ->withGlobals(['tags' => $tags])
@@ -33,13 +36,13 @@ class TagController
 
     public function store(): void
     {
-        Tag::create($_POST);
+        $this->tagModel->save($_POST);
         header('Location: /tags');
     }
 
     public function edit(int $id): void
     {
-        $tag = Tag::find($id);
+        $tag = $this->tagModel->find($id);
         $this->htmlRenderer
             ->withContent('Views/tag/form.php')
             ->withGlobals(['tag' => $tag])
@@ -48,15 +51,13 @@ class TagController
 
     public function update(int $id): void
     {
-        $tag = Tag::find($id);
-        $tag->update($_POST);
+        $this->tagModel->update($id, $_POST);
         header('Location: /tags');
     }
 
     public function destroy(int $id): void
     {
-        $tag = Tag::find($id);
-        $tag->delete();
+        $this->tagModel->delete($id);
         header('Location: /tags');
     }
 }
