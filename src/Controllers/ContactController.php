@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Controllers;
 
 use Exception;
-use JetBrains\PhpStorm\NoReturn;
 use JsonException;
 use Models\City;
 use Models\Contact;
@@ -143,7 +142,7 @@ class ContactController
     /**
      * @throws JsonException
      */
-    #[NoReturn] public function export(): void
+    public function export(): never
     {
         $format = $_GET['format'] ?? 'json';
         $contacts = $this->contactModel->getAllWithRelations();
@@ -157,7 +156,7 @@ class ContactController
         }
     }
 
-    #[NoReturn] private function exportXml(array $contacts): void
+    private function exportXml(array $contacts): never
     {
         header('Content-Type: application/xml');
         $xml = new SimpleXMLElement('<contacts/>');
@@ -192,7 +191,7 @@ class ContactController
     /**
      * @throws JsonException
      */
-    #[NoReturn] private function exportJson(array $contacts): void
+    private function exportJson(array $contacts): never
     {
         header('Content-Type: application/json');
         echo json_encode($contacts, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
