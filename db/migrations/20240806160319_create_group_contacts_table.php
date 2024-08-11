@@ -10,7 +10,7 @@ final class CreateGroupContactsTable extends AbstractMigration
         $table = $this->table('group_contacts');
         $table->addColumn('group_id', 'integer', ['signed' => false])
             ->addColumn('contact_id', 'integer', ['signed' => false])
-            ->addForeignKey('group_id', 'groups', 'id', ['delete' => 'CASCADE', 'update' => 'NO_ACTION'])
+            ->addForeignKey('group_id', 'groups_table', 'id', ['delete' => 'CASCADE', 'update' => 'NO_ACTION'])
             ->addForeignKey('contact_id', 'contacts', 'id', ['delete' => 'CASCADE', 'update' => 'NO_ACTION'])
             ->create();
     }

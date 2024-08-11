@@ -42,7 +42,7 @@
 			<label class="block text-lg font-medium mb-2">Groups:
 				<select name="group_ids[]" class="w-full p-2 border rounded" multiple>
                     <?php foreach ($groups as $group): ?>
-						<option value="<?php echo $group['id']; ?>" <?php echo (isset($contact) && in_array($group['id'], $contact['group_ids'] ?? [])) ? 'selected' : ''; ?>>
+						<option value="<?php echo $group['id']; ?>" <?php echo (isset($contact) && in_array($group['id'], $contact['group_ids'])) ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($group['name']); ?>
 						</option>
                     <?php endforeach; ?>
@@ -56,7 +56,7 @@
 			<label class="block text-lg font-medium mb-2">Tags:
 				<select name="tag_ids[]" class="w-full p-2 border rounded" multiple>
                     <?php foreach ($tags as $tag): ?>
-						<option value="<?php echo $tag['id']; ?>" <?php echo (isset($contact) && in_array($tag['id'], $contact['tag_ids'] ?? [])) ? 'selected' : ''; ?>>
+						<option value="<?php echo $tag['id']; ?>" <?php echo (isset($contact) && in_array($tag['id'], $contact['tag_ids'])) ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($tag['name']); ?>
 						</option>
                     <?php endforeach; ?>

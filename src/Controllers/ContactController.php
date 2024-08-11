@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace Controllers;
 
+use Exception;
+use JetBrains\PhpStorm\NoReturn;
+use JsonException;
 use Models\City;
 use Models\Contact;
 use Models\Group;
@@ -45,7 +48,7 @@ class ContactController
         if ($groupId === 'all' && $tagId === 'all') {
             $contacts = $this->contactModel->getAllWithRelations();
         } elseif ($groupId !== 'all') {
-            $contacts = $this->getContactsByGroupId((int)$groupId);
+            $contacts = $this->contactModel->getContactsByGroupWithRelations((int)$groupId);
         } else {
             $contacts = $this->contactModel->getByTagIdsWithRelations([(int)$tagId]);
         }
@@ -59,22 +62,9 @@ class ContactController
             ->render();
     }
 
-    private function getContactsByGroupId(int $groupId): array
-    {
-        $group = $this->groupModel->find($groupId);
-        if (!$group) {
-            return [];
-        }
-
-        $parentGroupIds = array_column($this->groupModel->parentGroups($groupId), 'id');
-        $groupIds = array_merge([$groupId], $parentGroupIds);
-
-        return $this->contactModel->getByGroupIdsWithRelations($groupIds);
-    }
-
     public function show(int $id): void
     {
-        $contact = $this->contactModel->with(['city', 'groups', 'tags'])->find($id);
+        $contact = $this->contactModel->getContactWithRelations($id);
 
         $this->htmlRenderer
             ->withContent('Views/contact/show.php')
@@ -86,21 +76,28 @@ class ContactController
     {
         $this->htmlRenderer
             ->withContent('Views/contact/form.php')
-            ->withGlobals(['cities' => $this->cityModel->all()])
+            ->withGlobals([
+                'cities' => $this->cityModel->all(),
+                'groups' => $this->groupModel->all(),
+                'tags' => $this->tagModel->all()
+            ])
             ->render();
     }
 
+    /**
+     * @throws Exception
+     */
     public function store(): void
     {
         $postData = $_POST;
         $contact = $this->contactModel->save($postData);
 
         if (!empty($postData['group_ids'])) {
-            $this->contactModel->attachGroups($contact['id'], $postData['group_ids']);
+            $this->contactModel->syncGroups($contact['id'], $postData['group_ids']);
         }
 
         if (!empty($postData['tag_ids'])) {
-            $this->contactModel->attachTags($contact['id'], $postData['tag_ids']);
+            $this->contactModel->syncTags($contact['id'], $postData['tag_ids']);
         }
 
         header('Location: /contacts');
@@ -108,9 +105,8 @@ class ContactController
 
     public function edit(int $id): void
     {
-        $contact = $this->contactModel->with(['groups', 'tags'])->find($id);
+        $contact = $this->contactModel->getContactWithRelations($id);
 
-        // Extract group_ids and tag_ids
         $contact['group_ids'] = array_column($contact['groups'], 'id');
         $contact['tag_ids'] = array_column($contact['tags'], 'id');
 
@@ -118,11 +114,16 @@ class ContactController
             ->withContent('Views/contact/form.php')
             ->withGlobals([
                 'contact' => $contact,
-                'cities' => $this->cityModel->all()
+                'cities' => $this->cityModel->all(),
+                'groups' => $this->groupModel->all(),
+                'tags' => $this->tagModel->all()
             ])
             ->render();
     }
 
+    /**
+     * @throws Exception
+     */
     public function update(int $id): void
     {
         $postData = $_POST;
@@ -139,30 +140,33 @@ class ContactController
         header('Location: /contacts');
     }
 
-    public function export(): void
+    /**
+     * @throws JsonException
+     */
+    #[NoReturn] public function export(): void
     {
         $format = $_GET['format'] ?? 'json';
-        $contacts = $this->contactModel->with(['city', 'groups', 'tags'])->all();
+        $contacts = $this->contactModel->getAllWithRelations();
 
         switch ($format) {
             case 'xml':
                 $this->exportXml($contacts);
-                break;
             case 'json':
             default:
                 $this->exportJson($contacts);
-                break;
         }
     }
 
-    private function exportXml(array $contacts): void
+    #[NoReturn] private function exportXml(array $contacts): void
     {
         header('Content-Type: application/xml');
         $xml = new SimpleXMLElement('<contacts/>');
 
         foreach ($contacts as $contact) {
             $contactNode = $xml->addChild('contact');
-            $this->arrayToXml($contact, $contactNode);
+            if ($contactNode !== null) {
+                $this->arrayToXml($contact, $contactNode);
+            }
         }
 
         echo $xml->asXML();
@@ -172,23 +176,26 @@ class ContactController
     private function arrayToXml(array $data, SimpleXMLElement $xmlElement): void
     {
         foreach ($data as $key => $value) {
-            // Ensure the key is a valid string for XML element names
             $key = is_int($key) ? 'item' . $key : $key;
 
             if (is_array($value)) {
                 $subnode = $xmlElement->addChild($key);
-                $this->arrayToXml($value, $subnode);
+                if ($subnode !== null) {
+                    $this->arrayToXml($value, $subnode);
+                }
             } else {
-                // Handle possible null values by converting them to empty strings
                 $xmlElement->addChild($key, htmlspecialchars((string)($value ?? '')));
             }
         }
     }
 
-    private function exportJson(array $contacts): void
+    /**
+     * @throws JsonException
+     */
+    #[NoReturn] private function exportJson(array $contacts): void
     {
         header('Content-Type: application/json');
-        echo json_encode($contacts, JSON_PRETTY_PRINT);
+        echo json_encode($contacts, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
         exit;
     }
 }

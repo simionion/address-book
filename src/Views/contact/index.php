@@ -5,7 +5,7 @@
 <?php } else { ?>
 	<ul class="pl-5 space-y-2">
         <?php foreach ($contacts as $contact) { ?>
-            <?php include __DIR__ . '/../components/contactItem.php'; ?>
+            <?php include __DIR__ . '/item.php'; ?>
         <?php } ?>
 	</ul>
 <?php } ?>

@@ -10,20 +10,18 @@ class Tag extends Model
     protected string $table = 'tags';
     protected array $fillable = ['name'];
 
-    public function contacts(int $tagId): array
-    {
-        return $this->belongsToMany(Contact::class, 'contact_tags', 'tag_id', 'contact_id', $tagId);
-    }
 
+    // Retrieve all tags that have at least one contact associated
     public function whereHasContacts(): array
     {
         $sql = "
-            SELECT {$this->table}.* FROM {$this->table}
+            SELECT tags.* FROM {$this->table}
             WHERE EXISTS (
                 SELECT 1 FROM contact_tags
-                WHERE contact_tags.tag_id = {$this->table}.id
+                WHERE contact_tags.tag_id = tags.id
             )
         ";
+
         return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 }

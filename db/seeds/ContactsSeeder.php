@@ -28,7 +28,7 @@ class ContactsSeeder extends AbstractSeed
             ['id' => 4, 'name' => 'Group C'],
             ['id' => 5, 'name' => 'Group D'],
         ];
-        $this->table('groups')->insert($groups)->saveData();
+        $this->table('groups_table')->insert($groups)->saveData();
 
         // Insert initial group contacts
         $groupContacts = [
@@ -54,6 +54,26 @@ class ContactsSeeder extends AbstractSeed
             ['parent_group_id' => 4, 'child_group_id' => 5],
         ];
         $this->table('group_inheritance')->insert($groupInheritance)->saveData();
+
+
+        $tags = [
+            ['id' => 1, 'name' => 'Tag 1'],
+            ['id' => 2, 'name' => 'Tag 2'],
+            ['id' => 3, 'name' => 'Tag 3'],
+        ];
+        $this->table('tags')->insert($tags)->saveData();
+
+        // Insert random tags for each contact
+        $contactTags = [];
+        foreach ($contacts as $contact) {
+            $tagIds = range(1, 3);
+            shuffle($tagIds);
+            $selectedTags = array_slice($tagIds, 0, rand(0, 3));
+            foreach ($selectedTags as $tagId) {
+                $contactTags[] = ['contact_id' => $contact['id'], 'tag_id' => $tagId];
+            }
+        }
+        $this->table('contact_tags')->insert($contactTags)->saveData();
     }
 
 }
