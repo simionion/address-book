@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-use PHPUnit\Framework\TestCase;
 use Models\City;
 use Models\Contact;
 use Models\Group;
 use Models\Tag;
+use PHPUnit\Framework\TestCase;
 
 class ModelTest extends TestCase
 {
@@ -42,7 +42,7 @@ class ModelTest extends TestCase
         ");
 
         $this->pdo->exec("
-            CREATE TABLE groups (
+            CREATE TABLE groups_table (
                 id INTEGER PRIMARY KEY,
                 name TEXT
             );
@@ -60,7 +60,7 @@ class ModelTest extends TestCase
                 contact_id INTEGER,
                 group_id INTEGER,
                 FOREIGN KEY(contact_id) REFERENCES contacts(id),
-                FOREIGN KEY(group_id) REFERENCES groups(id)
+                FOREIGN KEY(group_id) REFERENCES groups_table(id)
             );
         ");
 
@@ -77,8 +77,8 @@ class ModelTest extends TestCase
             CREATE TABLE group_inheritance (
                 parent_group_id INTEGER,
                 child_group_id INTEGER,
-                FOREIGN KEY(parent_group_id) REFERENCES groups(id),
-                FOREIGN KEY(child_group_id) REFERENCES groups(id)
+                FOREIGN KEY(parent_group_id) REFERENCES groups_table(id),
+                FOREIGN KEY(child_group_id) REFERENCES groups_table(id)
             );
         ");
     }
@@ -124,68 +124,135 @@ class ModelTest extends TestCase
         $this->assertNull($deletedCity);
     }
 
-    public function testCityHasManyContacts(): void
+    public function testGetAllWithRelations(): void
     {
         $city = new City($this->pdo);
         $savedCity = $city->save(['name' => 'Test City']);
 
+        $group = new Group($this->pdo);
+        $savedGroup = $group->save(['name' => 'Test Group']);
+
+        $tag = new Tag($this->pdo);
+        $savedTag = $tag->save(['name' => 'Test Tag']);
+
         $contact = new Contact($this->pdo);
-        $savedContact1 = $contact->save(['name' => 'John Doe', 'city_id' => $savedCity['id']]);
-        $savedContact2 = $contact->save(['name' => 'Jane Doe', 'city_id' => $savedCity['id']]);
+        $savedContact = $contact->save([
+            'name' => 'John Doe',
+            'first_name' => 'John',
+            'email' => 'john@example.com',
+            'street' => '123 Main St',
+            'zip_code' => '12345',
+            'city_id' => $savedCity['id'],
+        ]);
 
-        $contacts = $city->contacts($savedCity['id']);
+        $contact->attachGroups($savedContact['id'], [$savedGroup['id']]);
+        $contact->attachTags($savedContact['id'], [$savedTag['id']]);
 
-        $this->assertCount(2, $contacts);
+        $contacts = $contact->getAllWithRelations();
+
+        $this->assertCount(1, $contacts);
         $this->assertEquals('John Doe', $contacts[0]['name']);
-        $this->assertEquals('Jane Doe', $contacts[1]['name']);
+        $this->assertEquals('Test City', $contacts[0]['city_name']);
+        $this->assertEquals('Test Group', $contacts[0]['groups'][0]['name']);
+        $this->assertEquals('Test Tag', $contacts[0]['tags'][0]['name']);
     }
 
-    public function testContactBelongsToCity(): void
+    public function testGetByTagIdsWithRelations(): void
     {
-        $city = new City($this->pdo);
-        $savedCity = $city->save(['name' => 'Test City']);
+        $tag = new Tag($this->pdo);
+        $savedTag = $tag->save(['name' => 'Test Tag']);
 
         $contact = new Contact($this->pdo);
-        $savedContact = $contact->save(['name' => 'John Doe', 'city_id' => $savedCity['id']]);
+        $savedContact = $contact->save([
+            'name' => 'John Doe',
+            'first_name' => 'John',
+            'email' => 'john@example.com',
+            'street' => '123 Main St',
+            'zip_code' => '12345',
+        ]);
 
-        $relatedCity = $contact->city($savedContact['id']);
+        $contact->attachTags($savedContact['id'], [$savedTag['id']]);
 
-        $this->assertNotNull($relatedCity);
-        $this->assertEquals('Test City', $relatedCity['name']);
+        $contacts = $contact->getByTagIdsWithRelations([$savedTag['id']]);
+
+        $this->assertCount(1, $contacts);
+        $this->assertEquals('John Doe', $contacts[0]['name']);
+        $this->assertEquals('Test Tag', $contacts[0]['tags'][0]['name']);
     }
 
-    public function testContactBelongsToManyGroups(): void
+    public function testGetContactsByGroupWithRelations(): void
+    {
+        $parentGroup = new Group($this->pdo);
+        $savedParentGroup = $parentGroup->save(['name' => 'Parent Group']);
+
+        $childGroup = new Group($this->pdo);
+        $savedChildGroup = $childGroup->save(['name' => 'Child Group']);
+
+        // Insert the parent-child relationship (childGroup -> parentGroup)
+        $this->pdo->exec("INSERT INTO group_inheritance (parent_group_id, child_group_id) VALUES ({$savedParentGroup['id']}, {$savedChildGroup['id']})");
+
+        $contact = new Contact($this->pdo);
+        $savedContact = $contact->save([
+            'name' => 'John Doe',
+            'first_name' => 'John',
+            'email' => 'john@example.com',
+            'street' => '123 Main St',
+            'zip_code' => '12345',
+        ]);
+
+        // Attach the contact to the child group
+        $contact->attachGroups($savedContact['id'], [$savedChildGroup['id']]);
+
+        // Retrieve contacts by the child group, which should also consider its parent group
+        $contacts = $contact->getContactsByGroupWithRelations($savedChildGroup['id']);
+
+        $this->assertCount(1, $contacts);
+        $this->assertEquals('John Doe', $contacts[0]['name']);
+        $this->assertEquals('Child Group', $contacts[0]['groups'][0]['name']);
+    }
+
+    public function testSyncGroups(): void
     {
         $contact = new Contact($this->pdo);
-        $savedContact = $contact->save(['name' => 'John Doe']);
+        $savedContact = $contact->save([
+            'name' => 'John Doe',
+            'first_name' => 'John',
+            'email' => 'john@example.com',
+            'street' => '123 Main St',
+            'zip_code' => '12345',
+        ]);
 
         $group = new Group($this->pdo);
         $savedGroup1 = $group->save(['name' => 'Group 1']);
         $savedGroup2 = $group->save(['name' => 'Group 2']);
 
-        $this->pdo->exec("INSERT INTO group_contacts (contact_id, group_id) VALUES ({$savedContact['id']}, {$savedGroup1['id']})");
-        $this->pdo->exec("INSERT INTO group_contacts (contact_id, group_id) VALUES ({$savedContact['id']}, {$savedGroup2['id']})");
+        $contact->syncGroups($savedContact['id'], [$savedGroup1['id'], $savedGroup2['id']]);
 
-        $groups = $contact->groups($savedContact['id']);
+        $groups = $contact->getContactWithRelations($savedContact['id'])['groups'];
 
         $this->assertCount(2, $groups);
         $this->assertEquals('Group 1', $groups[0]['name']);
         $this->assertEquals('Group 2', $groups[1]['name']);
     }
 
-    public function testContactBelongsToManyTags(): void
+    public function testSyncTags(): void
     {
         $contact = new Contact($this->pdo);
-        $savedContact = $contact->save(['name' => 'John Doe']);
+        $savedContact = $contact->save([
+            'name' => 'John Doe',
+            'first_name' => 'John',
+            'email' => 'john@example.com',
+            'street' => '123 Main St',
+            'zip_code' => '12345',
+        ]);
 
         $tag = new Tag($this->pdo);
         $savedTag1 = $tag->save(['name' => 'Tag 1']);
         $savedTag2 = $tag->save(['name' => 'Tag 2']);
 
-        $this->pdo->exec("INSERT INTO contact_tags (contact_id, tag_id) VALUES ({$savedContact['id']}, {$savedTag1['id']})");
-        $this->pdo->exec("INSERT INTO contact_tags (contact_id, tag_id) VALUES ({$savedContact['id']}, {$savedTag2['id']})");
+        $contact->syncTags($savedContact['id'], [$savedTag1['id'], $savedTag2['id']]);
 
-        $tags = $contact->tags($savedContact['id']);
+        $tags = $contact->getContactWithRelations($savedContact['id'])['tags'];
 
         $this->assertCount(2, $tags);
         $this->assertEquals('Tag 1', $tags[0]['name']);

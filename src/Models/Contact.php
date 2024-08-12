@@ -92,14 +92,14 @@ class Contact extends Model
         }
     }
 
-    private function detachGroups(int $contactId): void
+    public function detachGroups(int $contactId): void
     {
         $sql = "DELETE FROM group_contacts WHERE contact_id = :contact_id";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['contact_id' => $contactId]);
     }
 
-    private function attachGroups(int $contactId, array $groupIds): void
+    public function attachGroups(int $contactId, array $groupIds): void
     {
         $sql = "INSERT INTO group_contacts (contact_id, group_id) VALUES (:contact_id, :group_id)";
         $stmt = $this->pdo->prepare($sql);
@@ -125,14 +125,14 @@ class Contact extends Model
         }
     }
 
-    private function detachTags(int $contactId): void
+    public function detachTags(int $contactId): void
     {
         $sql = "DELETE FROM contact_tags WHERE contact_id = :contact_id";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['contact_id' => $contactId]);
     }
 
-    private function attachTags(int $contactId, array $tagIds): void
+    public function attachTags(int $contactId, array $tagIds): void
     {
         $sql = "INSERT INTO contact_tags (contact_id, tag_id) VALUES (:contact_id, :tag_id)";
         $stmt = $this->pdo->prepare($sql);
