@@ -34,8 +34,6 @@ class ContactController
             ->withGlobals([
                 'groups' => $this->groupModel->all(),
                 'tags' => $this->tagModel->all(),
-                'groupsInUse' => $this->groupModel->whereHasContacts(),
-                'tagsInUse' => $this->tagModel->whereHasContacts()
             ]);
     }
 

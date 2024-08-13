@@ -5,7 +5,7 @@
 			<li class="mb-2">
 				<a href="/contacts" class="text-blue-500 hover:text-blue-700 <?php echo !isset($_GET['group']) && !isset($_GET['tag']) ? 'font-bold' : ''; ?>">All Contacts</a>
 			</li>
-            <?php foreach ($groupsInUse as $group): ?>
+            <?php foreach ($groups as $group): ?>
 				<li class="mb-2">
 					<a href="/contacts?group=<?php echo $group['id']; ?>" class="text-blue-500 hover:text-blue-700 <?php echo (isset($_GET['group']) && $_GET['group'] == $group['id']) ? 'font-bold' : ''; ?>"><?php echo htmlspecialchars($group['name']); ?></a>
 				</li>
@@ -16,7 +16,7 @@
 	<section class="mt-8">
 		<h3 class="text-xl font-semibold mb-4">Tags</h3>
 		<ul>
-            <?php foreach ($tagsInUse as $tag): ?>
+            <?php foreach ($tags as $tag): ?>
 				<li class="mb-2">
 					<a href="/contacts?tag=<?php echo $tag['id']; ?>" class="text-blue-500 hover:text-blue-700 <?php echo (isset($_GET['tag']) && $_GET['tag'] == $tag['id']) ? 'font-bold' : ''; ?>"><?php echo htmlspecialchars($tag['name']); ?></a>
 				</li>

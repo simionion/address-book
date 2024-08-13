@@ -154,22 +154,4 @@ class Group extends Model
             $stmt->execute(['parent_group_id' => $groupId, 'child_group_id' => $childGroupId]);
         }
     }
-
-    public function whereHasContacts(): array
-    {
-        $sql = "
-        SELECT DISTINCT groups_table.* 
-        FROM groups_table
-        LEFT JOIN group_contacts ON group_contacts.group_id = groups_table.id
-        LEFT JOIN group_inheritance AS parent_inheritance ON parent_inheritance.parent_group_id = groups_table.id
-        LEFT JOIN group_inheritance AS child_inheritance ON child_inheritance.child_group_id = groups_table.id
-        LEFT JOIN group_contacts AS parent_contacts ON parent_contacts.group_id = child_inheritance.child_group_id
-        LEFT JOIN group_contacts AS child_contacts ON child_contacts.group_id = parent_inheritance.parent_group_id
-        WHERE group_contacts.contact_id IS NOT NULL
-        OR parent_contacts.contact_id IS NOT NULL
-        OR child_contacts.contact_id IS NOT NULL
-    ";
-
-        return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
-    }
 }
