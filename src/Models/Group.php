@@ -15,9 +15,9 @@ class Group extends Model
     {
         $sql = "
             SELECT groups_table.*, group_inheritance.child_group_id, groups_child.name AS child_group_name
-            FROM groups
+            FROM groups_table
             LEFT JOIN group_inheritance ON groups_table.id = group_inheritance.parent_group_id
-            LEFT JOIN groups AS groups_child ON group_inheritance.child_group_id = groups_child.id
+            LEFT JOIN groups_table AS groups_child ON group_inheritance.child_group_id = groups_child.id
         ";
 
         $stmt = $this->pdo->query($sql);
@@ -56,11 +56,11 @@ class Group extends Model
         $sql = "
             SELECT groups_table.*, parent_groups_table.id AS parent_group_id, parent_groups_table.name AS parent_group_name,
                    child_groups_table.id AS child_group_id, child_groups_table.name AS child_group_name
-            FROM groups
+            FROM groups_table
             LEFT JOIN group_inheritance AS parent_inheritance ON parent_inheritance.child_group_id = groups_table.id
-            LEFT JOIN groups AS parent_groups ON parent_inheritance.parent_group_id = parent_groups_table.id
+            LEFT JOIN groups_table AS parent_groups_table ON parent_inheritance.parent_group_id = parent_groups_table.id
             LEFT JOIN group_inheritance AS child_inheritance ON child_inheritance.parent_group_id = groups_table.id
-            LEFT JOIN groups AS child_groups ON child_inheritance.child_group_id = child_groups_table.id
+            LEFT JOIN groups_table AS child_groups_table ON child_inheritance.child_group_id = child_groups_table.id
             WHERE groups_table.id = :group_id
         ";
 
@@ -158,12 +158,17 @@ class Group extends Model
     public function whereHasContacts(): array
     {
         $sql = "
-            SELECT groups_table.* FROM groups_table
-            WHERE EXISTS (
-                SELECT 1 FROM group_contacts
-                WHERE group_contacts.group_id = groups_table.id
-            )
-        ";
+        SELECT DISTINCT groups_table.* 
+        FROM groups_table
+        LEFT JOIN group_contacts ON group_contacts.group_id = groups_table.id
+        LEFT JOIN group_inheritance AS parent_inheritance ON parent_inheritance.parent_group_id = groups_table.id
+        LEFT JOIN group_inheritance AS child_inheritance ON child_inheritance.child_group_id = groups_table.id
+        LEFT JOIN group_contacts AS parent_contacts ON parent_contacts.group_id = child_inheritance.child_group_id
+        LEFT JOIN group_contacts AS child_contacts ON child_contacts.group_id = parent_inheritance.parent_group_id
+        WHERE group_contacts.contact_id IS NOT NULL
+        OR parent_contacts.contact_id IS NOT NULL
+        OR child_contacts.contact_id IS NOT NULL
+    ";
 
         return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
