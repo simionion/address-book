@@ -28,6 +28,7 @@ class ContactController
         $this->groupModel = $groupModel;
         $this->tagModel = $tagModel;
 
+        // Common options for all routes, extended by route-specific options
         $this->htmlRenderer
             ->withLayout('Views/layout/main.php')
             ->withSidebar('Views/contact/sidebar.php')
@@ -75,8 +76,6 @@ class ContactController
             ->withContent('Views/contact/form.php')
             ->withGlobals([
                 'cities' => $this->cityModel->all(),
-                'groups' => $this->groupModel->all(),
-                'tags' => $this->tagModel->all()
             ])
             ->render();
     }
@@ -112,8 +111,6 @@ class ContactController
             ->withGlobals([
                 'contact' => $contact,
                 'cities' => $this->cityModel->all(),
-                'groups' => $this->groupModel->all(),
-                'tags' => $this->tagModel->all()
             ])
             ->render();
     }
